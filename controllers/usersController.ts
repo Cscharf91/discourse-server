@@ -49,7 +49,7 @@ const register = async (req: Request, res: Response) => {
 
     const {
       rows: emailExistsRow,
-    } = await pool.query("SELECT * FROM users WHERE email = $1", [email.toLowerCase()]);
+    } = await pool.query("SELECT * FROM users WHERE email ILIKE $1", [email]);
     const [emailExists] = emailExistsRow;
     if (emailExists)
       return res.status(400).json({ messages: "Email already exists" });
@@ -58,11 +58,11 @@ const register = async (req: Request, res: Response) => {
 
     await pool.query(
       "INSERT INTO users (username, email, password) VALUES ($1, $2, $3)",
-      [username.toLowerCase(), email.toLowerCase(), hashedPass]
+      [username, email, hashedPass]
     );
     const {
       rows: userRow,
-    } = await pool.query("SELECT * FROM users WHERE email = $1", [email.toLowerCase()]);
+    } = await pool.query("SELECT * FROM users WHERE email ILIKE $1", [email.toLowerCase()]);
     const [user] = userRow;
 
     const token = jwt.sign({ id: user.id }, process.env.TOKEN_SECRET);
@@ -79,8 +79,8 @@ const login = async (req: Request, res: Response) => {
   const {
     rows,
   } = await pool.query(
-    "SELECT * FROM users WHERE email = $1 OR username = $2",
-    [username.toLowerCase(), username.toLowerCase()]
+    "SELECT * FROM users WHERE email ILIKE $1 OR username ILIKE $2",
+    [username, username]
   );
   let [user] = rows;
 
